@@ -16,7 +16,15 @@
     </section>
 
     <video playsinline autoplay muted></video>
+    <h2>Room ID: </h2>
+    <h4 id = 'room ID'>ID</h4>
+    <canvas id="canvas">
+    </canvas>
     <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var roomID = "<%= roomID %>";
+    </script>
     <script src="/broadcast.js"></script>
+
   </body>
 </html>

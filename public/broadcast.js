@@ -1,31 +1,34 @@
 const peerConnections = {};
+var width = 320; // We will scale the photo width to this
+var height = 320; // This will be computed based on the input stream
 const config = {
   iceServers: [
-    { 
-      "urls": "stun:stun.l.google.com:19302",
+    {
+      urls: "stun:stun.l.google.com:19302",
     },
-    // { 
+    // {
     //   "urls": "turn:TURN_IP?transport=tcp",
     //   "username": "TURN_USERNAME",
     //   "credential": "TURN_CREDENTIALS"
     // }
-  ]
+  ],
 };
 
 const socket = io.connect(window.location.origin);
+document.getElementById("room ID").innerHTML = roomID;
 
 socket.on("answer", (id, description) => {
   peerConnections[id].setRemoteDescription(description);
 });
 
-socket.on("watcher", id => {
+socket.on("watcher", (id) => {
   const peerConnection = new RTCPeerConnection(config);
   peerConnections[id] = peerConnection;
 
   let stream = videoElement.srcObject;
-  stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+  stream.getTracks().forEach((track) => peerConnection.addTrack(track, stream));
 
-  peerConnection.onicecandidate = event => {
+  peerConnection.onicecandidate = (event) => {
     if (event.candidate) {
       socket.emit("candidate", id, event.candidate);
     }
@@ -33,7 +36,7 @@ socket.on("watcher", id => {
 
   peerConnection
     .createOffer()
-    .then(sdp => peerConnection.setLocalDescription(sdp))
+    .then((sdp) => peerConnection.setLocalDescription(sdp))
     .then(() => {
       socket.emit("offer", id, peerConnection.localDescription);
     });
@@ -43,7 +46,7 @@ socket.on("candidate", (id, candidate) => {
   peerConnections[id].addIceCandidate(new RTCIceCandidate(candidate));
 });
 
-socket.on("disconnectPeer", id => {
+socket.on("disconnectPeer", (id) => {
   peerConnections[id].close();
   delete peerConnections[id];
 });
@@ -56,13 +59,12 @@ window.onunload = window.onbeforeunload = () => {
 const videoElement = document.querySelector("video");
 const audioSelect = document.querySelector("select#audioSource");
 const videoSelect = document.querySelector("select#videoSource");
+const canvas = document.getElementById("canvas");
 
 audioSelect.onchange = getStream;
 videoSelect.onchange = getStream;
 
-getStream()
-  .then(getDevices)
-  .then(gotDevices);
+getStream().then(getDevices).then(gotDevices);
 
 function getDevices() {
   return navigator.mediaDevices.enumerateDevices();
@@ -81,11 +83,14 @@ function gotDevices(deviceInfos) {
       videoSelect.appendChild(option);
     }
   }
+  window.setInterval(function () {
+    takepicture();
+  }, 5000);
 }
 
 function getStream() {
   if (window.stream) {
-    window.stream.getTracks().forEach(track => {
+    window.stream.getTracks().forEach((track) => {
       track.stop();
     });
   }
@@ -93,7 +98,7 @@ function getStream() {
   const videoSource = videoSelect.value;
   const constraints = {
     audio: { deviceId: audioSource ? { exact: audioSource } : undefined },
-    video: { deviceId: videoSource ? { exact: videoSource } : undefined }
+    video: { deviceId: videoSource ? { exact: videoSource } : undefined },
   };
   return navigator.mediaDevices
     .getUserMedia(constraints)
@@ -104,13 +109,28 @@ function getStream() {
 function gotStream(stream) {
   window.stream = stream;
   audioSelect.selectedIndex = [...audioSelect.options].findIndex(
-    option => option.text === stream.getAudioTracks()[0].label
+    (option) => option.text === stream.getAudioTracks()[0].label
   );
   videoSelect.selectedIndex = [...videoSelect.options].findIndex(
-    option => option.text === stream.getVideoTracks()[0].label
+    (option) => option.text === stream.getVideoTracks()[0].label
   );
   videoElement.srcObject = stream;
-  socket.emit("broadcaster");
+  socket.emit("broadcaster", roomID);
+}
+
+function takepicture() {
+  console.log("test");
+  var context = canvas.getContext("2d");
+  if (width && height) {
+    console.log("test");
+
+    canvas.width = width;
+    canvas.height = height;
+    context.drawImage(videoElement, 0, 0, width, height);
+
+    var data = canvas.toDataURL("image/png");
+    photo.setAttribute("src", data);
+  }
 }
 
 function handleError(error) {
