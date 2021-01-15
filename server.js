@@ -2,7 +2,8 @@ const express = require("express");
 const app = express();
 const { v4: uuidV4 } = require("uuid");
 
-let broadcasters = {};
+let broadcasters = new Map();
+let watchers = new Map();
 const port = 4000;
 
 const http = require("http");
@@ -35,14 +36,17 @@ io.sockets.on("connection", (socket) => {
 
   socket.on("broadcaster", (roomID) => {
     console.log("NEW BROADCASTER: " + roomID);
-    broadcasters[roomID] = socket.id;
+    broadcasters.set(socket.id,roomID);
+    socket.join(roomID);
+
     console.log(broadcasters);
     socket.broadcast.emit("broadcaster", roomID);
   });
 
   socket.on("watcher", (roomID) => {
     console.log("NEW WATCHER: " + socket.id);
-    socket.to(broadcasters[roomID]).emit("watcher", socket.id);
+    socket.join(roomID);
+    socket.to(roomID).emit("watcher", socket.id);
   });
 
   socket.on("offer", (id, message) => {
@@ -60,9 +64,14 @@ io.sockets.on("connection", (socket) => {
     socket.to(id).emit("candidate", socket.id, message);
   });
 
-  socket.on("disconnect", (roomID) => {
+  socket.on("bandwidthChange", (id, bandwidth, roomID) => {
+    socket.to(roomID).emit('bandwidthUpdate', socket.id, bandwidth);
+  })
+
+  socket.on("disconnect", () => {
     console.log("DISCONNECT");
-    socket.to(broadcasters[roomID]).emit("disconnectPeer", socket.id);
+    console.log("Room ID: "+ broadcasters.get(socket.id));
+    socket.to(broadcasters.get(socket.id)).emit("disconnectPeer", socket.id);
   });
 });
 server.listen(port, () => console.log(`Server is running on port ${port}`));

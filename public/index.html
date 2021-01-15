@@ -8,10 +8,25 @@
   <body>
     <video playsinline autoplay muted></video>
     <button id="enable-audio">Enable audio</button>
+      <label>Bandwidth:</label>
+      <select id="bandwidth" disabled>
+          <option value="unlimited" selected>unlimited</option>
+          <option value="2000">2000</option>
+          <option value="1000">1000</option>
+          <option value="500">500</option>
+          <option value="250">250</option>
+          <option value="125">125</option>
+          <option value="20">20</option>
+      </select>
+      kbps
+  <div id="disconnected">
+    The broadcaster is disconnected
+  </div>
     <script src="/socket.io/socket.io.js"></script>
     <script>
       var roomID = "<%= roomID %>";
     </script>
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
     <script src="/watch.js"></script>
   </body>
 </html>
