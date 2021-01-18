@@ -1,5 +1,4 @@
 const express = require("express");
-const app = express();
 const { v4: uuidV4 } = require("uuid");
 
 //Keep a list of the broadcasters that are connected to the websocket
@@ -9,8 +8,17 @@ let watchers = {};
 
 const port = 4000;
 
-const http = require("http");
-const server = http.createServer(app);
+const https = require("https");
+const fs = require("fs");
+
+var key = fs.readFileSync(__dirname + "/selfsigned.key");
+var cert = fs.readFileSync(__dirname + "/selfsigned.crt");
+var options = {
+  key: key,
+  cert: cert,
+};
+const app = express();
+const server = https.createServer(options, app);
 
 const io = require("socket.io")(server);
 app.engine("html", require("ejs").renderFile);
