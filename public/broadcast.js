@@ -16,14 +16,14 @@ const config = {
     {
       urls: "stun:stun.l.google.com:19302",
     },
-    // {
-    //   "urls": "turn:TURN_IP?transport=tcp",
-    //   "username": "TURN_USERNAME",
-    //   "credential": "TURN_CREDENTIALS"
-    // }
+    {
+      urls: "turn:3.128.226.104?transport=tcp",
+      username: "decentra",
+      credential: "decentra1234",
+    },
   ],
 };
-
+console.log(window.location.origin);
 const socket = io.connect(window.location.origin);
 document.getElementById("room ID").innerHTML = roomID;
 
